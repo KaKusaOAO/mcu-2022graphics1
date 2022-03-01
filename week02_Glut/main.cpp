@@ -103,8 +103,6 @@ void render() {
     KColorHSL(h[2], 1, 0.5);
     glVertex2f(0, 1);
 
-    glCompileShaeder
-
     glEnd();
 
     glutSwapBuffers();
