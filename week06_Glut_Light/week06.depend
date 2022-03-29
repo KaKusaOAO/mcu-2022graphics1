@@ -18,3 +18,8 @@
 	<GL/glu.h>
 	<stdlib.h>
 
+1648526204 source:c:\users\administrator\desktop\mcu-2022graphics1\week06_glut_light\main.cpp
+	<cstdio>
+	<cmath>
+	<GL/glut.h>
+

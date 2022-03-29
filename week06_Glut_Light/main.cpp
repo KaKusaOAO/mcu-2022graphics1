@@ -19,8 +19,12 @@ typedef struct {
 int width = 0, height = 0;
 float time = 0;
 float mx = 0, my = 0, oldX, oldY;
-float desiredMx = 0, desiredMy = 0;
+
+float ox = 0, oy = 0, desiredOx = 0, desiredOy = 0;
+float angle = 0, desiredAngle = 0;
 float scale = 1, desiredScale = 1;
+
+int mode = 1;
 
 LightData light = {
     { 0., 0., 0., 1. },
@@ -35,6 +39,18 @@ Material mat = {
     { 1., 1. ,1., 1. },
     { 100. }
 };
+
+float lerp(float a, float b, float t) {
+    return a + (b - a) * t;
+}
+
+float max(float a, float b) {
+    return a > b ? a : b;
+}
+
+float min(float a, float b) {
+    return a > b ? b : a;
+}
 
 void resize(int w, int h) {
     width = w;
@@ -55,36 +71,49 @@ void display() {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
     glColor3f(0xff / 255., 0x11 / 255., 0x4f / 255.);
 
+    scale = lerp(scale, desiredScale, 0.1);
+    angle = lerp(angle, desiredAngle, 0.1);
+    ox = lerp(ox, desiredOx, 0.1);
+    oy = lerp(oy, desiredOy, 0.1);
+
     glPushMatrix();
-        glTranslatef(0., 0., -5.);
-        glRotatef(time, 1, sin(time/60.), 0);
+        glTranslatef(ox, oy, -5.);
+        glRotatef(angle, 0, 1, 0);
         glScalef(scale, scale, scale);
         glutSolidTeapot(1.);
     glPopMatrix();
-
 
     glutSwapBuffers();
     time += 1;
 }
 
 void keyboard(unsigned char c, int a, int b) {
-    exit(0);
-}
-
-float lerp(float a, float b, float t) {
-    return a + (b - a) * t;
+    if (c == '1' || c == 'w' || c == 'W') mode = 1;
+    else if (c == '2' || c == 'e' || c == 'E') mode = 2;
+    else if (c == '3' || c == 'r' || c == 'R') mode = 3;
+    else exit(0);
 }
 
 void motion(int x, int y) {
-    desiredMx = x;
-    desiredMy = y;
-    mx = lerp(mx, desiredMx, 0.1);
-    my = lerp(my, desiredMy, 0.1);
-
     float dx = x - oldX;
     float dy = y - oldY;
-    desiredScale *= 1 + dx / (float)width;
-    scale = lerp(scale, desiredScale, 0.01);
+
+    switch (mode) {
+    case 1:
+        desiredOx += dx / 256;
+        desiredOy -= dy / 256;
+        break;
+    case 2:
+        desiredAngle += dx;
+        break;
+    case 3:
+        desiredScale *= 1 + dx / (float)width;
+        break;
+    }
+
+    desiredOx = max(-2, min(2, desiredOx));
+    desiredOy = max(-2, min(2, desiredOy));
+    desiredScale = max(0.5, min(desiredScale, 2));
 
     oldX = x;
     oldY = y;
@@ -104,7 +133,7 @@ void idle() {
 int main(int argc, char **argv) {
     glutInit(&argc, argv);
     glutInitDisplayMode(GLUT_RGB | GLUT_DOUBLE | GLUT_DEPTH);
-    glutCreateWindow("Light");
+    glutCreateWindow("Light + Transform + Mouse + Keyboard");
     glutDisplayFunc(display);
     glutMouseFunc(mouse);
     glutMotionFunc(motion);
